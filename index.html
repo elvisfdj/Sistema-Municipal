@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <script type="text/babel">
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzjWQzqt5mR4lABleETEybE8gsnh6HYkTPrlcyrMG2KZGZPBgnST4v8ZiwPOgSk6tvsnA/exec';
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Numeração - Compartilhado</title>
@@ -36,26 +39,66 @@
             }, []);
 
             const carregarDados = async () => {
-                setCarregando(true);
-                try {
-                    const result = await window.storage.get('documentos-controle', true);
-                    if (result && result.value) {
-                        setDocumentos(JSON.parse(result.value));
-                    }
-                } catch (error) {
-                    console.log('Nenhum dado compartilhado ainda');
-                    setDocumentos([]);
-                }
-                setCarregando(false);
+  setCarregando(true);
+  try {
+    const res = await fetch(API_URL);
+    const json = await res.json();
+
+    if (json.sucesso) {
+      setDocumentos(json.dados || []);
+    } else {
+      alert('Falha ao carregar dados');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Erro de comunicação com o servidor');
+  }
+  setCarregando(false);
+};
+
             };
 
-            const salvarDados = async (dados) => {
-                setSalvando(true);
-                try {
-                    await window.storage.set('documentos-controle', JSON.stringify(dados), true);
-                } catch (error) {
-                    console.error('Erro ao salvar:', error);
-                    alert('Erro ao salvar dados. Tente novamente.');
+            const adicionarDocumento = async () => {
+  if (!novoDoc.setorOrigem.trim()) {
+    alert('Preencha o setor de origem');
+    return;
+  }
+
+  setSalvando(true);
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(novoDoc)
+    });
+
+    const json = await res.json();
+
+    if (!json.sucesso) {
+      throw new Error(json.erro || 'Erro ao salvar');
+    }
+
+    await carregarDados();
+
+    setNovoDoc({
+      tipo: 'EDITAL',
+      data: new Date().toISOString().split('T')[0],
+      setorOrigem: '',
+      setorDestino: '',
+      observacao: ''
+    });
+
+    alert(`Documento ${json.numero} registrado com sucesso`);
+
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao salvar documento');
+  }
+
+  setSalvando(false);
+};
+
                 }
                 setSalvando(false);
             };
