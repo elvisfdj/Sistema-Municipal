@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Numeração - Firebase</title>
-    <title>Desenvolvido por: Elvis Ferreira - elvis.fdj@aol.com</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -24,7 +23,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyAajyRVH8eR7gWDAF-cE7Y32sKCyH3my8I",
             authDomain: "controle-numeros.firebaseapp.com",
-            databaseURL: "https://controle-numeros-default-rtdb.firebaseio.com",
+            databaseURL: "https://controle-numeros-default-rtdb.firebaseio.com/",
             projectId: "controle-numeros",
             storageBucket: "controle-numeros.firebasestorage.app",
             messagingSenderId: "95868423352",
@@ -167,12 +166,24 @@
                     setCarregando(false);
                 };
 
-                documentosRef.on('value', onDataChange);
+                const onError = (error) => {
+                    console.error('Erro ao carregar dados:', error);
+                    setCarregando(false);
+                    alert('❌ Erro ao conectar com Firebase. Verifique as regras de segurança.');
+                };
+
+                documentosRef.on('value', onDataChange, onError);
+
+                // Timeout de segurança
+                const timeout = setTimeout(() => {
+                    setCarregando(false);
+                }, 5000);
 
                 // Cleanup
                 return () => {
                     documentosRef.off('value', onDataChange);
                     connectedRef.off();
+                    clearTimeout(timeout);
                 };
             }, [anoAtual]);
 
@@ -500,6 +511,24 @@
 
                         <div className="mt-4 text-center text-sm text-gray-600">
                             Total de documentos: {documentosFiltrados.length}
+                        </div>
+
+                        {/* Rodapé com Créditos */}
+                        <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
+                            <div className="text-center">
+                                <p className="text-gray-700 font-semibold mb-2">
+                                    💻 Desenvolvido por <span className="text-indigo-600">Elvis Ferreira</span>
+                                </p>
+                                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-sm text-gray-600">
+                                    <a href="mailto:elvis.fdj@aol.com" className="hover:text-indigo-600 transition flex items-center gap-1">
+                                        📧 elvis.fdj@aol.com
+                                    </a>
+                                    <span className="hidden sm:inline">•</span>
+                                    <a href="tel:+5522981382619" className="hover:text-indigo-600 transition flex items-center gap-1">
+                                        📱 (22) 98138-2619
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
