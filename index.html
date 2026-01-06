@@ -543,10 +543,16 @@
             );
         }
 
-        // ==================== SISTEMA 2: TAXAS (Simplificado para demo) ====================
+        // ==================== SISTEMA 2: TAXAS ====================
         function SistemaTaxas() {
             const [contribuintes, setContribuintes] = useState([]);
             const [carregando, setCarregando] = useState(true);
+            const [processando, setProcessando] = useState(false);
+            const [filtroStatus, setFiltroStatus] = useState('TODOS');
+            const [filtroBusca, setFiltroBusca] = useState('');
+            const [tabelaUFICAS] = useState([
+                { exercicio: 2026, valorUFICA: 179.50 }
+            ]);
 
             useEffect(() => {
                 const contribuintesRef = database.ref('contribuintes');
@@ -559,6 +565,8 @@
                             ...value
                         }));
                         setContribuintes(array);
+                    } else {
+                        setContribuintes([]);
                     }
                     setCarregando(false);
                 });
@@ -566,35 +574,209 @@
                 return () => contribuintesRef.off();
             }, []);
 
-            const processarArquivo = async (arquivo) => {
+            // Identificar tipo de pessoa
+            const identificarTipoPessoa = (documento) => {
+                const apenasNumeros = documento.replace(/\D/g, '');
+                return apenasNumeros.length === 11 ? 'CPF' : 'CNPJ';
+            };
+
+            // Simular consulta CNPJ
+            const consultarCNPJ = async (cnpj) => {
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                const portes = ['MEI', 'ME', 'EPP', 'DEMAIS'];
+                const regimes = ['MEI', 'SIMPLES_NACIONAL', 'LUCRO_PRESUMIDO', 'LUCRO_REAL'];
+                const cnaes = ['5611-2/01', '4711-3/01', '8630-5/03', '4721-1/02', '5620-1/01'];
+                
+                const porte = portes[Math.floor(Math.random() * portes.length)];
+                let regime = regimes[Math.floor(Math.random() * regimes.length)];
+                
+                if (porte === 'MEI') regime = 'MEI';
+                
+                return {
+                    porte,
+                    regime,
+                    cnae: cnaes[Math.floor(Math.random() * cnaes.length)],
+                    optanteSimples: regime === 'SIMPLES_NACIONAL' || regime === 'MEI',
+                    atividadeVigilancia: Math.random() > 0.7
+                };
+            };
+
+            // Calcular UFICAS
+            const calcularUFICAS = (dados) => {
+                const { tipoPessoa, porte, regime, nivelEscolaridade, atividadeIsenta } = dados;
+                
+                if (regime === 'MEI' || atividadeIsenta) {
+                    return { uficas: 0, status: 'ISENTO', motivo: regime === 'MEI' ? 'MEI' : 'Atividade Isenta' };
+                }
+                
+                if (tipoPessoa === 'CNPJ') {
+                    if (porte === 'ME') {
+                        return { uficas: 2, status: 'PROCESSADO', motivo: 'ME' };
+                    } else if (porte === 'EPP' || porte === 'DEMAIS') {
+                        if (regime === 'SIMPLES_NACIONAL') {
+                            return { uficas: 4, status: 'PROCESSADO', motivo: 'Simples Nacional' };
+                        } else if (regime === 'LUCRO_PRESUMIDO') {
+                            return { uficas: 8, status: 'PROCESSADO', motivo: 'Lucro Presumido' };
+                        } else if (regime === 'LUCRO_REAL') {
+                            return { uficas: 20, status: 'PROCESSADO', motivo: 'Lucro Real' };
+                        }
+                    }
+                } else if (tipoPessoa === 'CPF') {
+                    if (nivelEscolaridade === 'SUPERIOR') {
+                        return { uficas: 8, status: 'PROCESSADO', motivo: 'Autônomo Nível Superior' };
+                    } else {
+                        return { uficas: 5, status: 'PROCESSADO', motivo: 'Autônomo Nível Médio' };
+                    }
+                }
+                
+                return { uficas: 0, status: 'PENDENTE', motivo: 'Requer análise manual' };
+            };
+
+            // Processar arquivo Excel
+            const processarArquivoExcel = async (arquivo) => {
+                setProcessando(true);
+                
                 const reader = new FileReader();
                 reader.onload = async (e) => {
-                    const texto = e.target.result;
-                    const linhas = texto.split('\n');
-                    
-                    for (let i = 1; i < linhas.length; i++) {
-                        const linha = linhas[i].trim();
-                        if (!linha) continue;
+                    try {
+                        // Carregar SheetJS
+                        const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs');
                         
-                        const [documento, nomeRazao, inscricao] = linha.split(/[,;\t]/).map(s => s.trim());
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
                         
-                        if (!documento) continue;
+                        const novosContribuintes = [];
                         
-                        const contribuinte = {
-                            documento,
-                            nomeRazao,
-                            inscricaoMunicipal: inscricao || 'A definir',
-                            status: 'PENDENTE',
-                            criadoEm: firebase.database.ServerValue.TIMESTAMP
-                        };
+                        // Começa da linha 5 (índice 4) conforme sua planilha
+                        for (let i = 4; i < jsonData.length; i++) {
+                            const linha = jsonData[i];
+                            
+                            // Coluna B (índice 1) = Inscrição Municipal
+                            // Coluna C (índice 2) = CNPJ/CPF
+                            // Coluna D (índice 3) = Razão Social
+                            const inscricaoMunicipal = linha[1] ? String(linha[1]).trim() : '';
+                            const documento = linha[2] ? String(linha[2]).trim() : '';
+                            const nomeRazao = linha[3] ? String(linha[3]).trim() : '';
+                            
+                            if (!documento || !nomeRazao) continue;
+                            
+                            const tipoPessoa = identificarTipoPessoa(documento);
+                            let dadosConsulta = {};
+                            
+                            if (tipoPessoa === 'CNPJ') {
+                                dadosConsulta = await consultarCNPJ(documento);
+                            } else {
+                                dadosConsulta = {
+                                    nivelEscolaridade: 'MEDIO',
+                                    atividadeIsenta: false
+                                };
+                            }
+                            
+                            const resultado = calcularUFICAS({
+                                tipoPessoa,
+                                ...dadosConsulta
+                            });
+                            
+                            const valorUFICAAtual = tabelaUFICAS[0].valorUFICA;
+                            
+                            novosContribuintes.push({
+                                documento,
+                                nomeRazao,
+                                inscricaoMunicipal: inscricaoMunicipal || 'A definir',
+                                tipoPessoa,
+                                ...dadosConsulta,
+                                ...resultado,
+                                valorTotal: resultado.uficas * valorUFICAAtual,
+                                ordemServico: '',
+                                criadoEm: firebase.database.ServerValue.TIMESTAMP
+                            });
+                        }
                         
-                        await database.ref('contribuintes').push(contribuinte);
+                        // Salvar no Firebase
+                        for (const contrib of novosContribuintes) {
+                            await database.ref('contribuintes').push(contrib);
+                        }
+                        
+                        setProcessando(false);
+                        alert(`✅ ${novosContribuintes.length} contribuintes importados e processados com sucesso!`);
+                        
+                    } catch (error) {
+                        console.error('Erro ao processar Excel:', error);
+                        setProcessando(false);
+                        alert('❌ Erro ao processar arquivo. Verifique o formato.');
                     }
-                    
-                    alert('✅ Arquivo processado com sucesso!');
                 };
                 
-                reader.readAsText(arquivo);
+                reader.readAsArrayBuffer(arquivo);
+            };
+
+            // Exportar para Excel
+            const exportarParaExcel = async () => {
+                try {
+                    const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs');
+                    
+                    const dados = contribuintesFiltrados.map(c => ({
+                        'Inscrição Municipal': c.inscricaoMunicipal,
+                        'CPF/CNPJ': c.documento,
+                        'Nome/Razão Social': c.nomeRazao,
+                        'Tipo': c.tipoPessoa,
+                        'Porte': c.porte || '-',
+                        'Regime': c.regime || c.nivelEscolaridade || '-',
+                        'CNAE': c.cnae || '-',
+                        'Status': c.status,
+                        'UFICAS': c.uficas,
+                        'Valor Total': `R$ ${c.valorTotal.toFixed(2)}`,
+                        'Motivo': c.motivo,
+                        'Vigilância Sanitária': c.atividadeVigilancia ? 'SIM' : 'NÃO',
+                        'Ordem de Serviço': c.ordemServico || '-'
+                    }));
+                    
+                    const ws = XLSX.utils.json_to_sheet(dados);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, 'Contribuintes');
+                    
+                    XLSX.writeFile(wb, `taxas_municipais_${new Date().toISOString().split('T')[0]}.xlsx`);
+                    
+                } catch (error) {
+                    console.error('Erro ao exportar:', error);
+                    alert('❌ Erro ao exportar. Tente novamente.');
+                }
+            };
+
+            // Limpar todos os dados
+            const limparDados = async () => {
+                if (confirm('⚠️ Deseja realmente excluir TODOS os contribuintes? Esta ação não pode ser desfeita!')) {
+                    try {
+                        await database.ref('contribuintes').remove();
+                        alert('✅ Todos os dados foram removidos!');
+                    } catch (error) {
+                        console.error('Erro ao limpar dados:', error);
+                        alert('❌ Erro ao limpar dados.');
+                    }
+                }
+            };
+
+            // Filtros
+            const contribuintesFiltrados = contribuintes.filter(c => {
+                const statusMatch = filtroStatus === 'TODOS' || c.status === filtroStatus;
+                const buscaMatch = !filtroBusca || 
+                    c.documento.includes(filtroBusca) ||
+                    c.nomeRazao.toLowerCase().includes(filtroBusca.toLowerCase()) ||
+                    c.inscricaoMunicipal.includes(filtroBusca);
+                return statusMatch && buscaMatch;
+            });
+
+            // Estatísticas
+            const stats = {
+                total: contribuintes.length,
+                isentos: contribuintes.filter(c => c.status === 'ISENTO').length,
+                processados: contribuintes.filter(c => c.status === 'PROCESSADO').length,
+                pendentes: contribuintes.filter(c => c.status === 'PENDENTE').length,
+                totalUFICAS: contribuintes.reduce((sum, c) => sum + (c.uficas || 0), 0),
+                valorTotal: contribuintes.reduce((sum, c) => sum + (c.valorTotal || 0), 0)
             };
 
             if (carregando) {
@@ -611,6 +793,7 @@
             return (
                 <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
                     <div className="max-w-7xl mx-auto">
+                        {/* Cabeçalho */}
                         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
                             <h2 className="text-2xl font-bold text-gray-800 mb-4">
                                 💰 Sistema de Lançamento de Taxas Municipais
@@ -620,47 +803,197 @@
                             </p>
                         </div>
 
+                        {/* Estatísticas */}
+                        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
+                            <div className="bg-white rounded-lg shadow p-4">
+                                <p className="text-sm text-gray-600">Total</p>
+                                <p className="text-2xl font-bold text-blue-600">{stats.total}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-4">
+                                <p className="text-sm text-gray-600">Processados</p>
+                                <p className="text-2xl font-bold text-green-600">{stats.processados}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-4">
+                                <p className="text-sm text-gray-600">Isentos</p>
+                                <p className="text-2xl font-bold text-yellow-600">{stats.isentos}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-4">
+                                <p className="text-sm text-gray-600">Pendentes</p>
+                                <p className="text-2xl font-bold text-orange-600">{stats.pendentes}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-4">
+                                <p className="text-sm text-gray-600">Total UFICAS</p>
+                                <p className="text-2xl font-bold text-purple-600">{stats.totalUFICAS}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-4">
+                                <p className="text-sm text-gray-600">Valor Total</p>
+                                <p className="text-xl font-bold text-indigo-600">R$ {stats.valorTotal.toFixed(2)}</p>
+                            </div>
+                        </div>
+
                         {/* Upload */}
                         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                            <h3 className="text-xl font-bold text-gray-800 mb-4">Importar Relatório</h3>
+                            <h3 className="text-xl font-bold text-gray-800 mb-4">Importar Relatório Excel</h3>
                             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                                <div className="text-6xl mb-4">📤</div>
-                                <p className="text-gray-600 mb-4">
-                                    Arraste um arquivo CSV ou clique para selecionar
+                                <div className="text-6xl mb-4">📊</div>
+                                <p className="text-gray-600 mb-2 font-semibold">
+                                    Arraste um arquivo Excel (.xlsx) ou clique para selecionar
                                 </p>
                                 <p className="text-sm text-gray-500 mb-4">
-                                    Formato: CPF/CNPJ, Nome/Razão Social, Inscrição Municipal
+                                    <strong>Estrutura esperada:</strong><br/>
+                                    Coluna B = Inscrição Municipal | Coluna C = CPF/CNPJ | Coluna D = Nome/Razão Social
                                 </p>
                                 <input
                                     type="file"
-                                    accept=".csv,.txt"
-                                    onChange={(e) => e.target.files[0] && processarArquivo(e.target.files[0])}
+                                    accept=".xlsx,.xls"
+                                    onChange={(e) => e.target.files[0] && processarArquivoExcel(e.target.files[0])}
                                     className="hidden"
                                     id="file-upload-taxas"
+                                    disabled={processando}
                                 />
                                 <label
                                     htmlFor="file-upload-taxas"
-                                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 cursor-pointer inline-block"
+                                    className={`${processando ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white px-6 py-3 rounded-lg cursor-pointer inline-block transition`}
                                 >
-                                    Selecionar Arquivo
+                                    {processando ? '⏳ Processando...' : '📁 Selecionar Arquivo Excel'}
                                 </label>
+                            </div>
+                            
+                            {processando && (
+                                <div className="mt-4 text-center">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                                    <p className="text-gray-600">Processando contribuintes e consultando dados...</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Filtros e Ações */}
+                        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+                            <div className="flex flex-wrap items-center gap-4">
+                                <select
+                                    value={filtroStatus}
+                                    onChange={(e) => setFiltroStatus(e.target.value)}
+                                    className="px-3 py-2 border border-gray-300 rounded-lg"
+                                >
+                                    <option value="TODOS">Todos os Status</option>
+                                    <option value="PROCESSADO">Processados</option>
+                                    <option value="ISENTO">Isentos</option>
+                                    <option value="PENDENTE">Pendentes</option>
+                                </select>
+
+                                <input
+                                    type="text"
+                                    value={filtroBusca}
+                                    onChange={(e) => setFiltroBusca(e.target.value)}
+                                    placeholder="Buscar por CPF/CNPJ, nome, inscrição..."
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                                />
+
+                                <button
+                                    onClick={exportarParaExcel}
+                                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    Exportar Excel
+                                </button>
+
+                                <button
+                                    onClick={limparDados}
+                                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center gap-2"
+                                >
+                                    🗑️ Limpar Dados
+                                </button>
                             </div>
                         </div>
 
                         {/* Tabela de Contribuintes */}
                         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                            <div className="p-4 bg-gray-50 border-b">
-                                <h3 className="font-semibold text-gray-800">
-                                    Contribuintes Cadastrados ({contribuintes.length})
-                                </h3>
-                            </div>
                             <div className="overflow-x-auto">
-                                <table className="w-full">
+                                <table className="w-full text-sm">
                                     <thead className="bg-blue-600 text-white">
                                         <tr>
-                                            <th className="px-4 py-3 text-left">Documento</th>
-                                            <th className="px-4 py-3 text-left">Nome/Razão Social</th>
-                                            <th className="px-4 py-3 text-left">Inscrição Municipal</th>
+                                            <th className="px-3 py-3 text-left">Status</th>
+                                            <th className="px-3 py-3 text-left">Insc. Municipal</th>
+                                            <th className="px-3 py-3 text-left">CPF/CNPJ</th>
+                                            <th className="px-3 py-3 text-left">Nome/Razão Social</th>
+                                            <th className="px-3 py-3 text-left">Tipo</th>
+                                            <th className="px-3 py-3 text-left">Regime/Porte</th>
+                                            <th className="px-3 py-3 text-center">UFICAS</th>
+                                            <th className="px-3 py-3 text-left">Valor Total</th>
+                                            <th className="px-3 py-3 text-left">OS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {contribuintesFiltrados.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="9" className="px-4 py-8 text-center text-gray-500">
+                                                    Nenhum contribuinte encontrado
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            contribuintesFiltrados.map((c, index) => (
+                                                <tr key={c.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                                                    <td className="px-3 py-2">
+                                                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                                            c.status === 'PROCESSADO' ? 'bg-green-100 text-green-800' :
+                                                            c.status === 'ISENTO' ? 'bg-yellow-100 text-yellow-800' :
+                                                            'bg-orange-100 text-orange-800'
+                                                        }`}>
+                                                            {c.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-3 py-2">{c.inscricaoMunicipal}</td>
+                                                    <td className="px-3 py-2 font-mono">{c.documento}</td>
+                                                    <td className="px-3 py-2">{c.nomeRazao}</td>
+                                                    <td className="px-3 py-2">
+                                                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                                            c.tipoPessoa === 'CNPJ' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                                                        }`}>
+                                                            {c.tipoPessoa}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-3 py-2 text-xs">{c.regime || c.nivelEscolaridade || '-'}</td>
+                                                    <td className="px-3 py-2 font-bold text-center">{c.uficas}</td>
+                                                    <td className="px-3 py-2">R$ {c.valorTotal ? c.valorTotal.toFixed(2) : '0.00'}</td>
+                                                    <td className="px-3 py-2">
+                                                        <input
+                                                            type="text"
+                                                            value={c.ordemServico || ''}
+                                                            onChange={(e) => {
+                                                                database.ref('contribuintes/' + c.id).update({
+                                                                    ordemServico: e.target.value
+                                                                });
+                                                            }}
+                                                            placeholder="OS"
+                                                            className="w-20 px-2 py-1 border border-gray-300 rounded text-xs"
+                                                        />
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 text-center text-sm text-gray-600">
+                            Mostrando {contribuintesFiltrados.length} de {contribuintes.length} contribuinte(s)
+                        </div>
+
+                        {/* Informações */}
+                        <div className="mt-6 bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+                            <p className="text-blue-800 text-sm">
+                                <strong>ℹ️ Regras de Enquadramento:</strong> MEI = Isento | ME = 2 UFICAS | 
+                                EPP/Simples = 4 UFICAS | Lucro Presumido = 8 UFICAS | Lucro Real = 20 UFICAS | 
+                                Autônomo Superior = 8 UFICAS | Autônomo Médio = 5 UFICAS
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }left">Inscrição Municipal</th>
                                             <th className="px-4 py-3 text-left">Status</th>
                                         </tr>
                                     </thead>
