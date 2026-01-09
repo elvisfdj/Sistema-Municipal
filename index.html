@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 </head>
+
 <body>
     <div id="root"></div>
     <script type="text/babel">
@@ -29,38 +31,25 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const ALIQUOTAS_ISSQN = { MEI: 0, ME: 2.5, EPP: 2.5, LUCRO_PRESUMIDO: 8, LUCRO_REAL: 20 };
-        const ALIQUOTAS_CPF = { NIVEL_MEDIO: 5, NIVEL_SUPERIOR: 8, ISENTO: 0 };
-        const TFLF_CPF = 2.5;
+        const CNAES_VISA = ['4711', '4712', '4721', '4722', '4723', '4724', '4729', '5611', '5612', '5620', '8610', '8621', '8622', '8630', '8640', '8650', '1011', '1012', '1013', '1020', '1031', '1032', '1033', '4631', '4632', '4633', '4634', '4635', '4636', '4637', '4639', '1051', '1052', '1053', '1061', '1062', '1063', '1064', '1065', '1066', '1069', '1071', '1072', '4781', '4782', '4783', '4784', '4785', '4789', '8711', '8712', '8720', '8730', '8800', '4771', '4772', '4773', '4774'];
+        const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const AUDITORES = ['Adel A.', 'Alessandro N.', 'Aline P.', 'Amanda V.', 'Carolina S.', 'Erick J.', 'Fagne A.', 'Gabriel S.', 'Igor B.', 'Jennipher A.', 'Matheus C.', 'Nahttura P.', 'Natalia C.', 'Natalia G.', 'Pedro A.', 'Raphael O.', 'Rodrigo R.', 'Thiago S.', 'Tiago M.'];
+        const VALOR_UFICA_2026 = 179.50;
 
         const TABELA_VISA = [
-            { min: 0, max: 50, uficas: 0.8, valorIntegral: 143.60, valorME_EPP: 71.80 },
-            { min: 51, max: 100, uficas: 1.0, valorIntegral: 179.50, valorME_EPP: 89.75 },
-            { min: 101, max: 150, uficas: 1.5, valorIntegral: 269.25, valorME_EPP: 134.63 },
-            { min: 151, max: 200, uficas: 2.0, valorIntegral: 359.00, valorME_EPP: 179.50 },
-            { min: 201, max: 300, uficas: 2.5, valorIntegral: 448.75, valorME_EPP: 224.38 },
-            { min: 301, max: 350, uficas: 3.0, valorIntegral: 538.50, valorME_EPP: 269.25 },
-            { min: 351, max: 400, uficas: 3.5, valorIntegral: 628.25, valorME_EPP: 314.13 },
-            { min: 401, max: 500, uficas: 4.0, valorIntegral: 718.00, valorME_EPP: 359.00 },
-            { min: 501, max: 600, uficas: 4.5, valorIntegral: 807.75, valorME_EPP: 403.88 },
-            { min: 601, max: 1000, uficas: 5.0, valorIntegral: 897.50, valorME_EPP: 448.75 },
-            { min: 1001, max: 1500, uficas: 6.0, valorIntegral: 1077.00, valorME_EPP: 538.50 },
-            { min: 1501, max: Infinity, uficas: 7.0, valorIntegral: 1256.50, valorME_EPP: 628.25 }
+            { min: 0, max: 50, valorIntegral: 143.60, valorME_EPP: 71.80 },
+            { min: 51, max: 100, valorIntegral: 179.50, valorME_EPP: 89.75 },
+            { min: 101, max: 150, valorIntegral: 269.25, valorME_EPP: 134.63 },
+            { min: 151, max: 200, valorIntegral: 359.00, valorME_EPP: 179.50 },
+            { min: 201, max: 300, valorIntegral: 448.75, valorME_EPP: 224.38 },
+            { min: 301, max: 350, valorIntegral: 538.50, valorME_EPP: 269.25 },
+            { min: 351, max: 400, valorIntegral: 628.25, valorME_EPP: 314.13 },
+            { min: 401, max: 500, valorIntegral: 718.00, valorME_EPP: 359.00 },
+            { min: 501, max: 600, valorIntegral: 807.75, valorME_EPP: 403.88 },
+            { min: 601, max: 1000, valorIntegral: 897.50, valorME_EPP: 448.75 },
+            { min: 1001, max: 1500, valorIntegral: 1077.00, valorME_EPP: 538.50 },
+            { min: 1501, max: Infinity, valorIntegral: 1256.50, valorME_EPP: 628.25 }
         ];
-
-        const CNAES_VISA = [
-            '4711', '4712', '4721', '4722', '4723', '4724', '4729', // Comércio varejista
-            '5611', '5612', '5620', // Alimentação
-            '8610', '8621', '8622', '8630', '8640', '8650', // Saúde
-            '1011', '1012', '1013', '1020', '1031', '1032', '1033', // Fabricação de alimentos
-            '4631', '4632', '4633', '4634', '4635', '4636', '4637', '4639', // Comércio atacadista de alimentos
-            '1051', '1052', '1053', '1061', '1062', '1063', '1064', '1065', '1066', '1069', '1071', '1072', // Laticínios e moagem
-            '4781', '4782', '4783', '4784', '4785', '4789', // Comércio ambulante
-            '8711', '8712', '8720', '8730', '8800', // Assistência social
-            '4771', '4772', '4773', '4774', '4781' // Farmácias e produtos médicos
-        ];
-        const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-        const VALOR_UFICA_2026 = 179.50;
 
         function App() {
             const [auth, setAuth] = useState(false);
@@ -73,11 +62,11 @@
                 <div>
                     <nav className="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg">
                         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-                            <h1 className="text-white font-bold text-xl">🏛️ Sistema Municipal - Controle Geral</h1>
+                            <h1 className="text-white font-bold text-xl">🏛️ Sistema Municipal</h1>
                             <div className="flex gap-4">
-                                <button onClick={() => setTab('doc')} className={`px-4 py-2 rounded-lg font-medium transition ${tab==='doc'?'bg-white text-blue-600':'text-white hover:bg-blue-500'}`}>📄 Documentos</button>
-                                <button onClick={() => setTab('tax')} className={`px-4 py-2 rounded-lg font-medium transition ${tab==='tax'?'bg-white text-blue-600':'text-white hover:bg-blue-500'}`}>💰 Contribuintes</button>
-                                <button onClick={() => setAuth(false)} className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 font-medium">🚪 Sair</button>
+                                <button onClick={() => setTab('doc')} className={`px-4 py-2 rounded-lg font-medium ${tab === 'doc' ? 'bg-white text-blue-600' : 'text-white hover:bg-blue-500'}`}>📄 Documentos</button>
+                                <button onClick={() => setTab('tax')} className={`px-4 py-2 rounded-lg font-medium ${tab === 'tax' ? 'bg-white text-blue-600' : 'text-white hover:bg-blue-500'}`}>💰 Contribuintes</button>
+                                <button onClick={() => setAuth(false)} className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">🚪 Sair</button>
                             </div>
                         </div>
                     </nav>
@@ -153,28 +142,19 @@
             const add = async () => {
                 if (!form.setorOrigem.trim()) return alert('Preencha o Setor de Origem');
                 const num = docs.filter(d => d.tipo === form.tipo).length + 1;
-                await db.ref('documentos/' + year).push({ 
-                    ...form, 
-                    numero: `${String(num).padStart(4, '0')}/${year}`, 
-                    criadoEm: Date.now(),
-                    criadoPor: 'SAR'
-                });
+                await db.ref('documentos/' + year).push({ ...form, numero: `${String(num).padStart(4, '0')}/${year}`, criadoEm: Date.now(), criadoPor: 'SAR' });
                 setForm({ tipo: 'EDITAL', data: new Date().toISOString().split('T')[0], setorOrigem: '', setorDestino: '', obs: '' });
                 alert('✅ Documento adicionado!');
             };
 
             const update = async (id) => {
-                await db.ref('documentos/' + year + '/' + id).update({
-                    ...editando,
-                    editadoEm: Date.now(),
-                    editadoPor: 'SAR'
-                });
+                await db.ref('documentos/' + year + '/' + id).update({ ...editando, editadoEm: Date.now(), editadoPor: 'SAR' });
                 setEditando(null);
                 alert('✅ Documento atualizado!');
             };
 
             const del = async (id) => {
-                if (confirm('Excluir documento? Esta ação não pode ser desfeita.')) {
+                if (confirm('Excluir documento?')) {
                     await db.ref('documentos/' + year + '/' + id).remove();
                 }
             };
@@ -216,23 +196,20 @@
                     <div className="max-w-7xl mx-auto">
                         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-2xl font-bold text-gray-800">📄 Controle de Numeração - {year}</h2>
-                                <button onClick={exportCSV} className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                                    Exportar CSV
-                                </button>
+                                <h2 className="text-2xl font-bold">📄 Controle de Numeração - {year}</h2>
+                                <button onClick={exportCSV} className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">📊 Exportar CSV</button>
                             </div>
 
                             <div className="grid md:grid-cols-4 gap-4 mb-6">
-                                <select value={filtros.tipo} onChange={(e) => setFiltros({...filtros, tipo: e.target.value})} className="px-3 py-2 border rounded-lg">
+                                <select value={filtros.tipo} onChange={(e) => setFiltros({ ...filtros, tipo: e.target.value })} className="px-3 py-2 border rounded-lg">
                                     <option value="TODOS">Todos os Tipos</option>
                                     <option value="EDITAL">EDITAL</option>
                                     <option value="OFICIO">OFÍCIO</option>
                                     <option value="MEMORANDO">MEMORANDO</option>
                                 </select>
-                                <input type="text" value={filtros.setor} onChange={(e) => setFiltros({...filtros, setor: e.target.value})} placeholder="Buscar por setor..." className="px-3 py-2 border rounded-lg" />
-                                <input type="date" value={filtros.dataInicio} onChange={(e) => setFiltros({...filtros, dataInicio: e.target.value})} className="px-3 py-2 border rounded-lg" placeholder="Data início" />
-                                <input type="date" value={filtros.dataFim} onChange={(e) => setFiltros({...filtros, dataFim: e.target.value})} className="px-3 py-2 border rounded-lg" placeholder="Data fim" />
+                                <input type="text" value={filtros.setor} onChange={(e) => setFiltros({ ...filtros, setor: e.target.value })} placeholder="Buscar por setor..." className="px-3 py-2 border rounded-lg" />
+                                <input type="date" value={filtros.dataInicio} onChange={(e) => setFiltros({ ...filtros, dataInicio: e.target.value })} className="px-3 py-2 border rounded-lg" />
+                                <input type="date" value={filtros.dataFim} onChange={(e) => setFiltros({ ...filtros, dataFim: e.target.value })} className="px-3 py-2 border rounded-lg" />
                             </div>
 
                             <div className="grid md:grid-cols-4 gap-4">
@@ -258,17 +235,17 @@
                         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
                             <h3 className="text-xl font-bold mb-4">➕ Novo Documento</h3>
                             <div className="grid md:grid-cols-3 gap-4">
-                                <select value={form.tipo} onChange={(e) => setForm({...form, tipo: e.target.value})} className="px-3 py-2 border rounded-lg">
+                                <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })} className="px-3 py-2 border rounded-lg">
                                     <option>EDITAL</option>
                                     <option>OFICIO</option>
                                     <option>MEMORANDO</option>
                                 </select>
-                                <input type="date" value={form.data} onChange={(e) => setForm({...form, data: e.target.value})} className="px-3 py-2 border rounded-lg" />
-                                <input type="text" value={form.setorOrigem} onChange={(e) => setForm({...form, setorOrigem: e.target.value})} placeholder="Setor Origem *" className="px-3 py-2 border rounded-lg" />
-                                <input type="text" value={form.setorDestino} onChange={(e) => setForm({...form, setorDestino: e.target.value})} placeholder="Setor Destino" className="px-3 py-2 border rounded-lg" />
-                                <input type="text" value={form.obs} onChange={(e) => setForm({...form, obs: e.target.value})} placeholder="Observação" className="px-3 py-2 border rounded-lg md:col-span-2" />
+                                <input type="date" value={form.data} onChange={(e) => setForm({ ...form, data: e.target.value })} className="px-3 py-2 border rounded-lg" />
+                                <input type="text" value={form.setorOrigem} onChange={(e) => setForm({ ...form, setorOrigem: e.target.value })} placeholder="Setor Origem *" className="px-3 py-2 border rounded-lg" />
+                                <input type="text" value={form.setorDestino} onChange={(e) => setForm({ ...form, setorDestino: e.target.value })} placeholder="Setor Destino" className="px-3 py-2 border rounded-lg" />
+                                <input type="text" value={form.obs} onChange={(e) => setForm({ ...form, obs: e.target.value })} placeholder="Observação" className="px-3 py-2 border rounded-lg md:col-span-2" />
                             </div>
-                            <button onClick={add} className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium">➕ Adicionar Documento</button>
+                            <button onClick={add} className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">➕ Adicionar</button>
                         </div>
 
                         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -293,15 +270,15 @@
                                                 <tr key={d.id} className={i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                                                     {editando?.id === d.id ? (
                                                         <>
-                                                            <td className="px-4 py-3"><select value={editando.tipo} onChange={(e) => setEditando({...editando, tipo: e.target.value})} className="px-2 py-1 border rounded w-full"><option>EDITAL</option><option>OFICIO</option><option>MEMORANDO</option></select></td>
+                                                            <td className="px-4 py-3"><select value={editando.tipo} onChange={(e) => setEditando({ ...editando, tipo: e.target.value })} className="px-2 py-1 border rounded w-full"><option>EDITAL</option><option>OFICIO</option><option>MEMORANDO</option></select></td>
                                                             <td className="px-4 py-3 font-mono">{d.numero}</td>
-                                                            <td className="px-4 py-3"><input type="date" value={editando.data} onChange={(e) => setEditando({...editando, data: e.target.value})} className="px-2 py-1 border rounded w-full" /></td>
-                                                            <td className="px-4 py-3"><input type="text" value={editando.setorOrigem} onChange={(e) => setEditando({...editando, setorOrigem: e.target.value})} className="px-2 py-1 border rounded w-full" /></td>
-                                                            <td className="px-4 py-3"><input type="text" value={editando.setorDestino || ''} onChange={(e) => setEditando({...editando, setorDestino: e.target.value})} className="px-2 py-1 border rounded w-full" /></td>
-                                                            <td className="px-4 py-3"><input type="text" value={editando.obs || ''} onChange={(e) => setEditando({...editando, obs: e.target.value})} className="px-2 py-1 border rounded w-full" /></td>
+                                                            <td className="px-4 py-3"><input type="date" value={editando.data} onChange={(e) => setEditando({ ...editando, data: e.target.value })} className="px-2 py-1 border rounded w-full" /></td>
+                                                            <td className="px-4 py-3"><input type="text" value={editando.setorOrigem} onChange={(e) => setEditando({ ...editando, setorOrigem: e.target.value })} className="px-2 py-1 border rounded w-full" /></td>
+                                                            <td className="px-4 py-3"><input type="text" value={editando.setorDestino || ''} onChange={(e) => setEditando({ ...editando, setorDestino: e.target.value })} className="px-2 py-1 border rounded w-full" /></td>
+                                                            <td className="px-4 py-3"><input type="text" value={editando.obs || ''} onChange={(e) => setEditando({ ...editando, obs: e.target.value })} className="px-2 py-1 border rounded w-full" /></td>
                                                             <td className="px-4 py-3 text-center">
-                                                                <button onClick={() => update(d.id)} className="text-green-600 hover:text-green-800 mr-2 text-xl" title="Salvar">✓</button>
-                                                                <button onClick={() => setEditando(null)} className="text-gray-600 hover:text-gray-800 text-xl" title="Cancelar">✗</button>
+                                                                <button onClick={() => update(d.id)} className="text-green-600 hover:text-green-800 mr-2 text-xl">✓</button>
+                                                                <button onClick={() => setEditando(null)} className="text-gray-600 hover:text-gray-800 text-xl">✗</button>
                                                             </td>
                                                         </>
                                                     ) : (
@@ -313,8 +290,8 @@
                                                             <td className="px-4 py-3">{d.setorDestino || '-'}</td>
                                                             <td className="px-4 py-3 text-sm">{d.obs || '-'}</td>
                                                             <td className="px-4 py-3 text-center">
-                                                                <button onClick={() => setEditando(d)} className="text-blue-600 hover:text-blue-800 mr-2" title="Editar">✏️</button>
-                                                                <button onClick={() => del(d.id)} className="text-red-600 hover:text-red-800" title="Excluir">🗑️</button>
+                                                                <button onClick={() => setEditando(d)} className="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                                <button onClick={() => del(d.id)} className="text-red-600 hover:text-red-800">🗑️</button>
                                                             </td>
                                                         </>
                                                     )}
@@ -340,100 +317,67 @@
             const [abaAtiva, setAbaAtiva] = useState('principal');
             const [modalInserir, setModalInserir] = useState(false);
             const [formInserir, setFormInserir] = useState({ inscricao: '', documento: '', nome: '' });
+            const [modoVisualizacao, setModoVisualizacao] = useState('mensal');
+            const [periodoInicio, setPeriodoInicio] = useState(0);
+            const [periodoFim, setPeriodoFim] = useState(11);
 
             const valorUficaAtual = valorUfica[ano] || VALOR_UFICA_2026;
 
+            // Carregar dados do Firebase filtrados por mês/ano
             useEffect(() => {
-                const dadosExemplo = [
-                    {
-                        id: '1',
-                        inscricaoMunicipal: '154610',
-                        documento: '64204564000129',
-                        tipoPessoa: 'CNPJ',
-                        razaoSocial: 'VITRINE VEICULOS COMERCIO E SERVICOS LTDA',
-                        porte: '',
-                        tributacao: '',
-                        situacao: '',
-                        areaM2: 75,
-                        ordemServico: '',
-                        nivelISSQN: 'VARIAVEL',
-                        issqnIsento: false,
-                        trimestreAbertura: 1,
-                        taxasLancadas: 'NAO',
-                        consultado: false,
-                        precisaVisa: false
-                    },
-                    {
-                        id: '2',
-                        inscricaoMunicipal: '154611',
-                        documento: '12345678901',
-                        tipoPessoa: 'CPF',
-                        razaoSocial: 'JOÃO DA SILVA - AUTONOMO',
-                        porte: '',
-                        tributacao: 'AUTONOMO',
-                        situacao: '',
-                        areaM2: 0,
-                        ordemServico: '',
-                        nivelISSQN: 'SUPERIOR',
-                        issqnIsento: false,
-                        trimestreAbertura: 2,
-                        taxasLancadas: 'NAO',
-                        consultado: false
-                    }
-                ];
-                setList(dadosExemplo);
-            }, []);
+                const chave = `contribuintes/${ano}/${mes}`;
+                const ref = db.ref(chave);
+                ref.on('value', (snap) => {
+                    const data = snap.val();
+                    setList(data ? Object.entries(data).map(([k, v]) => ({ id: k, ...v })) : []);
+                });
+                return () => ref.off();
+            }, [mes, ano]);
+
+            const salvarNoFirebase = async (contribuinte) => {
+                const chave = `contribuintes/${ano}/${mes}`;
+                await db.ref(chave).push(contribuinte);
+            };
 
             const consultarCNPJ = async (cnpj, id) => {
                 try {
-                    // Aguardar 12 segundos entre requisições (conforme especificação)
                     if (ultimaConsulta) {
                         const tempoDecorrido = Date.now() - ultimaConsulta.getTime();
                         if (tempoDecorrido < 12000) {
                             await new Promise(resolve => setTimeout(resolve, 12000 - tempoDecorrido));
                         }
                     }
-                    
+
                     const response = await fetch(`https://open.cnpja.com/office/${cnpj}`);
-                    
-                    if (!response.ok) {
-                        throw new Error('Erro na consulta');
-                    }
-                    
+                    if (!response.ok) throw new Error('Erro na consulta');
+
                     const data = await response.json();
-                    
-                    // Extrair porte da API
+
                     let porte = '';
                     if (data.company?.size?.acronym) {
-                        porte = data.company.size.acronym; // ME, EPP, etc
+                        porte = data.company.size.acronym;
                     } else if (data.company?.size?.text) {
                         const porteText = data.company.size.text.toUpperCase();
                         if (porteText.includes('MICRO')) porte = 'ME';
                         else if (porteText.includes('PEQUENO')) porte = 'EPP';
                         else porte = 'DEMAIS';
                     }
-                    
-                    // Extrair tributação conforme especificação
+
                     let tributacao = '';
                     if (data.company?.simei?.optant) {
                         tributacao = 'MEI';
                     } else if (porte === 'ME') {
-                        // ME sempre é SIMPLES por padrão
                         tributacao = 'SIMPLES';
                     } else if (data.company?.simples?.optant && porte === 'EPP') {
-                        // EPP optante pelo Simples Nacional
                         tributacao = 'SIMPLES';
                     } else if (porte === 'EPP' && !data.company?.simples?.optant) {
                         tributacao = 'EPP';
                     } else {
-                        // Demais casos: Lucro Presumido por padrão
                         tributacao = 'LUCRO PRESUMIDO';
                     }
-                    
-                    // Extrair situação cadastral exatamente como vem da API
+
                     let situacao = data.status?.text || '';
-                    
-                    // Verificar se precisa de vigilância sanitária
+
                     const cnaes = [];
                     if (data.mainActivity?.id) {
                         const cnaeStr = String(data.mainActivity.id);
@@ -447,24 +391,21 @@
                             }
                         });
                     }
-                    
+
                     const precisaVisa = cnaes.some(cnae => CNAES_VISA.includes(cnae));
-                    
-                    setList(prevList => prevList.map(item => 
-                        item.id === id ? { 
-                            ...item, 
-                            porte,
-                            tributacao,
-                            situacao,
-                            precisaVisa,
-                            consultado: true,
-                            dadosAPI: data
-                        } : item
+
+                    const atualizado = { porte, tributacao, situacao, precisaVisa, verificado: true, dadosAPI: data };
+
+                    setList(prevList => prevList.map(item =>
+                        item.id === id ? { ...item, ...atualizado } : item
                     ));
-                    
+
+                    // Atualizar no Firebase
+                    await db.ref(`contribuintes/${ano}/${mes}/${id}`).update(atualizado);
+
                     setConsultasRealizadas(prev => prev + 1);
                     setUltimaConsulta(new Date());
-                    
+
                     return { success: true, porte, tributacao, situacao };
                 } catch (error) {
                     console.error('Erro ao consultar CNPJ:', error);
@@ -472,38 +413,26 @@
                 }
             };
 
-            const consultarApenasCPFs = () => {
-                const cpfs = list.filter(l => l.tipoPessoa === 'CPF');
-                if (cpfs.length === 0) {
-                    alert('Nenhum CPF encontrado na lista!');
-                    return;
-                }
-                alert(`✅ Encontrados ${cpfs.length} CPFs na lista. Eles já estão visíveis pois CPF não precisa de consulta na API.`);
-            };
-
             const consultarTodos = async () => {
-                const naoConsultados = list.filter(l => !l.consultado && l.tipoPessoa === 'CNPJ');
-                
+                const naoConsultados = list.filter(l => !l.verificado && l.tipoPessoa === 'CNPJ');
+
                 if (naoConsultados.length === 0) {
                     alert('Todos os CNPJs já foram consultados!');
                     return;
                 }
-                
+
                 setConsultandoQueue(naoConsultados.map(l => l.id));
-                
+
                 for (let i = 0; i < naoConsultados.length; i++) {
                     const item = naoConsultados[i];
-                    
                     await consultarCNPJ(item.documento, item.id);
-                    
-                    // Aguardar 12 segundos entre cada consulta
                     if (i < naoConsultados.length - 1) {
                         await new Promise(resolve => setTimeout(resolve, 12000));
                     }
                 }
-                
+
                 setConsultandoQueue([]);
-                alert(`✅ ${naoConsultados.length} CNPJs consultados com sucesso!`);
+                alert(`✅ ${naoConsultados.length} CNPJs consultados!`);
             };
 
             const calcISSQN = (nivel, trimestre, isento, tipoPessoa) => {
@@ -514,25 +443,22 @@
             };
 
             const calcVISA = (area, tributacao, porte, precisaVisa) => {
-                // MEI e ISENTO não pagam VISA
                 if (tributacao === 'MEI' || tributacao === 'ISENTO' || !precisaVisa) return 0;
                 if (!area || area === 0) return 0;
-                
+
                 const faixa = TABELA_VISA.find(f => area >= f.min && area <= f.max);
                 if (!faixa) return 0;
-                
-                // SIMPLES (ME/EPP optante): 50% de desconto
+
                 if (tributacao === 'SIMPLES') {
                     return faixa.valorME_EPP;
                 }
-                
-                // Demais: valor integral
+
                 return faixa.valorIntegral;
             };
 
             const getPorteUFICAS = (tributacao, tipoPessoa) => {
                 if (tributacao === 'MEI' || tributacao === 'ISENTO') return 0;
-                
+
                 const valores = {
                     'MEI': 0,
                     'SIMPLES': 2.5,
@@ -542,9 +468,9 @@
                     'AUTONOMO': 2.5,
                     'ISENTO': 0
                 };
-                
+
                 if (tipoPessoa === 'CPF') return 2.5;
-                
+
                 return valores[tributacao] || 0;
             };
 
@@ -554,49 +480,56 @@
             };
 
             const calcDashboard = () => {
-                const total = list.length;
-                const pendentes = list.filter(l => l.taxasLancadas === 'NAO').length;
-                const consultados = list.filter(l => l.consultado).length;
-                
+                let listaCalculo = list;
+
+                // Aplicar filtro de visualização
+                if (modoVisualizacao === 'anual') {
+                    // Carregar todos os meses do ano
+                    // Por simplicidade, vamos usar apenas a lista atual
+                    listaCalculo = list;
+                } else if (modoVisualizacao === 'periodo') {
+                    // Filtrar por período
+                    listaCalculo = list;
+                }
+
+                const total = listaCalculo.length;
+                const pendentes = listaCalculo.filter(l => l.taxasLancadas === 'NAO').length;
+                const verificados = listaCalculo.filter(l => l.verificado).length;
+
                 const documentos = {};
                 const duplicados = [];
-                list.forEach(l => {
+                listaCalculo.forEach(l => {
                     if (documentos[l.documento]) {
                         duplicados.push(l.documento);
                     }
                     documentos[l.documento] = (documentos[l.documento] || 0) + 1;
                 });
                 const totalDuplicados = new Set(duplicados).size;
-                
+
                 let totalUFICAS = 0;
                 let totalReais = 0;
                 let totalISSQN = 0;
-                let porPorte = { MEI: 0, ME: 0, EPP: 0, 'L. Presumido': 0, 'L. Real': 0 };
-                
-                list.forEach(l => {
+
+                listaCalculo.forEach(l => {
                     const uficas = getPorteUFICAS(l.tributacao, l.tipoPessoa);
                     const reais = uficas * valorUficaAtual;
                     const issqn = calcISSQN(l.nivelISSQN, l.trimestreAbertura || 1, l.issqnIsento, l.tipoPessoa);
-                    
+
                     totalUFICAS += uficas;
                     totalReais += reais;
                     totalISSQN += issqn * valorUficaAtual;
-                    
-                    if (porPorte[l.tributacao] !== undefined) {
-                        porPorte[l.tributacao] += uficas;
-                    }
                 });
-                
-                const vigilancia = list.reduce((sum, l) => sum + calcVISA(l.areaM2 || 0, l.tributacao, l.porte, l.precisaVisa), 0);
 
-                return { total, pendentes, consultados, totalUFICAS, totalReais, porPorte, vigilancia, totalDuplicados, totalISSQN };
+                const vigilancia = listaCalculo.reduce((sum, l) => sum + calcVISA(l.areaM2 || 0, l.tributacao, l.porte, l.precisaVisa), 0);
+
+                return { total, pendentes, verificados, totalUFICAS, totalReais, vigilancia, totalDuplicados, totalISSQN };
             };
 
             const formatarMoeda = (valor) => {
                 return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             };
 
-            const inserirManual = () => {
+            const inserirManual = async () => {
                 if (!formInserir.documento.trim() || !formInserir.nome.trim()) {
                     alert('Preencha pelo menos Documento e Nome!');
                     return;
@@ -604,7 +537,6 @@
 
                 const clean = formInserir.documento.replace(/\D/g, '');
                 const novo = {
-                    id: Date.now() + Math.random(),
                     inscricaoMunicipal: formInserir.inscricao || '',
                     documento: clean,
                     tipoPessoa: clean.length === 11 ? 'CPF' : 'CNPJ',
@@ -618,36 +550,46 @@
                     issqnIsento: false,
                     trimestreAbertura: 1,
                     taxasLancadas: 'NAO',
-                    consultado: false,
+                    verificado: false,
                     precisaVisa: false,
                     criadoEm: Date.now()
                 };
 
-                setList([...list, novo]);
+                await salvarNoFirebase(novo);
                 setFormInserir({ inscricao: '', documento: '', nome: '' });
                 setModalInserir(false);
-                alert('✅ Contribuinte adicionado com sucesso!');
+                alert('✅ Contribuinte adicionado!');
             };
 
             const importarTXT = (file) => {
                 if (!file) return;
-                
+
                 const reader = new FileReader();
-                reader.onload = (e) => {
+                reader.onload = async (e) => {
                     const linhas = e.target.result.split('\n');
-                    const novosContribuintes = [];
-                    
+                    let novos = 0;
+                    let ignorados = 0;
+
+                    // Obter documentos já verificados
+                    const docsVerificados = new Set(list.filter(l => l.verificado).map(l => l.documento));
+
                     for (const l of linhas) {
                         if (!l.trim()) continue;
-                        
+
                         const partes = l.split('\t').map(p => p.trim());
                         const [insc, doc, nome] = partes;
-                        
+
                         if (!doc) continue;
-                        
+
                         const clean = doc.replace(/\D/g, '');
-                        novosContribuintes.push({
-                            id: Date.now() + Math.random(),
+
+                        // Ignorar se já foi verificado
+                        if (docsVerificados.has(clean)) {
+                            ignorados++;
+                            continue;
+                        }
+
+                        const contribuinte = {
                             inscricaoMunicipal: insc || '',
                             documento: clean,
                             tipoPessoa: clean.length === 11 ? 'CPF' : 'CNPJ',
@@ -658,59 +600,62 @@
                             issqnIsento: false,
                             trimestreAbertura: 1,
                             taxasLancadas: 'NAO',
-                            consultado: false,
+                            verificado: false,
                             criadoEm: Date.now()
-                        });
+                        };
+
+                        await salvarNoFirebase(contribuinte);
+                        novos++;
                     }
-                    
-                    setList([...list, ...novosContribuintes]);
-                    alert(`✅ ${novosContribuintes.length} contribuintes importados com sucesso!`);
+
+                    alert(`✅ ${novos} contribuintes importados!\n⏭️ ${ignorados} já verificados foram ignorados.`);
                 };
-                
+
                 reader.readAsText(file);
             };
 
             const exportCSV = () => {
-                const header = ['Inscrição', 'Documento', 'Nome', 'Porte', 'Tributação', 'TFLF (UFICAS)', 'TFLF (R$)', 'ISSQN (UFICAS)', 'ISSQN (R$)', 'VISA (R$)', 'Taxas Lançadas'];
+                const header = ['Inscrição', 'Documento', 'Nome', 'Porte', 'Tributação', 'N° OS', 'Auditor', 'TFLF (R$)', 'ISSQN (R$)', 'VISA (R$)', 'Verificado', 'Taxas Lançadas'];
                 const rows = list.map(l => {
-                    const uficas = getPorteUFICAS(l.tributacao, l.tipoPessoa);
                     const tflf = calcTFLFReais(l.tributacao, l.tipoPessoa);
                     const issqnUficas = calcISSQN(l.nivelISSQN, l.trimestreAbertura || 1, l.issqnIsento, l.tipoPessoa);
                     const issqnReais = issqnUficas * valorUficaAtual;
                     const visa = calcVISA(l.areaM2 || 0, l.tributacao, l.porte, l.precisaVisa);
-                    
+
                     return [
                         l.inscricaoMunicipal,
                         l.documento,
                         l.razaoSocial,
                         l.porte || '',
                         l.tributacao || '',
-                        uficas.toFixed(1),
+                        l.ordemServico || '',
+                        l.auditor || '',
                         tflf.toFixed(2),
-                        issqnUficas.toFixed(2),
                         issqnReais.toFixed(2),
                         visa.toFixed(2),
+                        l.verificado ? 'SIM' : 'NAO',
                         l.taxasLancadas
                     ];
                 });
-                
+
                 const csv = [header, ...rows].map(r => r.join(';')).join('\n');
                 const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                a.download = `taxas_${mes + 1}_${ano}.csv`;
+                a.download = `taxas_${MESES[mes]}_${ano}.csv`;
                 a.click();
             };
 
-            const update = (id, campo, valor) => {
-                setList(list.map(item => 
+            const update = async (id, campo, valor) => {
+                setList(list.map(item =>
                     item.id === id ? { ...item, [campo]: valor } : item
                 ));
+                await db.ref(`contribuintes/${ano}/${mes}/${id}`).update({ [campo]: valor });
             };
 
-            const excluir = (id) => {
-                if (confirm('Tem certeza que deseja excluir este registro?')) {
-                    setList(list.filter(item => item.id !== id));
+            const excluir = async (id) => {
+                if (confirm('Tem certeza que deseja excluir?')) {
+                    await db.ref(`contribuintes/${ano}/${mes}/${id}`).remove();
                 }
             };
 
@@ -722,7 +667,7 @@
                     }
                     documentos[l.documento].push(l);
                 });
-                
+
                 return Object.values(documentos).filter(grupo => grupo.length > 1).flat();
             };
 
@@ -733,48 +678,61 @@
                     <div className="mb-6">
                         <div className="flex items-center gap-3 mb-4">
                             <span className="text-3xl">💰</span>
-                            <h2 className="text-2xl font-bold text-gray-800">Lançamento de Taxas</h2>
+                            <h2 className="text-2xl font-bold">Lançamento de Taxas</h2>
                         </div>
 
-                        <div className="flex gap-4 mb-4">
-                            <select 
-                                value={mes}
-                                onChange={e => setMes(Number(e.target.value))}
-                                className="px-4 py-2 border rounded bg-white"
-                            >
-                                {MESES.map((m, i) => (
-                                    <option key={i} value={i}>{m}</option>
-                                ))}
+                        <div className="flex gap-4 mb-4 flex-wrap">
+                            <select value={modoVisualizacao} onChange={e => setModoVisualizacao(e.target.value)} className="px-4 py-2 border rounded bg-white">
+                                <option value="mensal">📅 Mensal</option>
+                                <option value="anual">📊 Consolidado Anual</option>
+                                <option value="periodo">📆 Por Período</option>
                             </select>
 
-                            <select
-                                value={ano}
-                                onChange={e => setAno(Number(e.target.value))}
-                                className="px-4 py-2 border rounded bg-white"
-                            >
+                            {modoVisualizacao === 'mensal' && (
+                                <>
+                                    <select value={mes} onChange={e => setMes(Number(e.target.value))} className="px-4 py-2 border rounded bg-white">
+                                        {MESES.map((m, i) => (
+                                            <option key={i} value={i}>{m}</option>
+                                        ))}
+                                    </select>
+                                </>
+                            )}
+
+                            {modoVisualizacao === 'periodo' && (
+                                <>
+                                    <select value={periodoInicio} onChange={e => setPeriodoInicio(Number(e.target.value))} className="px-4 py-2 border rounded bg-white">
+                                        {MESES.map((m, i) => (
+                                            <option key={i} value={i}>{m}</option>
+                                        ))}
+                                    </select>
+                                    <span className="flex items-center">até</span>
+                                    <select value={periodoFim} onChange={e => setPeriodoFim(Number(e.target.value))} className="px-4 py-2 border rounded bg-white">
+                                        {MESES.map((m, i) => (
+                                            <option key={i} value={i}>{m}</option>
+                                        ))}
+                                    </select>
+                                </>
+                            )}
+
+                            <select value={ano} onChange={e => setAno(Number(e.target.value))} className="px-4 py-2 border rounded bg-white">
                                 {[2026, 2027, 2028, 2029, 2030].map(a => (
                                     <option key={a} value={a}>{a}</option>
                                 ))}
                             </select>
 
-                            <div className="px-4 py-2 bg-blue-50 text-blue-700 rounded border border-blue-200 flex items-center gap-2">
-                                📅 {MESES[mes]}/{ano}
+                            <div className="px-4 py-2 bg-blue-50 text-blue-700 rounded border border-blue-200">
+                                {modoVisualizacao === 'mensal' && `📅 ${MESES[mes]}/${ano}`}
+                                {modoVisualizacao === 'anual' && `📊 Ano ${ano}`}
+                                {modoVisualizacao === 'periodo' && `📆 ${MESES[periodoInicio]} - ${MESES[periodoFim]}/${ano}`}
                             </div>
 
                             {ano >= 2027 ? (
                                 <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded px-3 py-2">
                                     <label className="text-sm text-green-700 font-medium">💵 UFICA {ano}:</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={valorUfica[ano] || ''}
-                                        onChange={e => setValorUfica({...valorUfica, [ano]: parseFloat(e.target.value) || 0})}
-                                        className="px-3 py-1 border rounded w-32 text-sm"
-                                        placeholder="0.00"
-                                    />
+                                    <input type="number" step="0.01" value={valorUfica[ano] || ''} onChange={e => setValorUfica({ ...valorUfica, [ano]: parseFloat(e.target.value) || 0 })} className="px-3 py-1 border rounded w-32 text-sm" placeholder="0.00" />
                                 </div>
                             ) : (
-                                <div className="px-4 py-2 bg-green-50 text-green-700 rounded border border-green-200 flex items-center gap-2 text-sm">
+                                <div className="px-4 py-2 bg-green-50 text-green-700 rounded border border-green-200 text-sm">
                                     💵 UFICA {ano}: R$ {formatarMoeda(valorUficaAtual)}
                                 </div>
                             )}
@@ -792,8 +750,8 @@
                             </div>
 
                             <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                                <div className="text-sm text-gray-600 mb-1">Consultados</div>
-                                <div className="text-3xl font-bold text-green-600">{dashboard.consultados}</div>
+                                <div className="text-sm text-gray-600 mb-1">✅ Verificados</div>
+                                <div className="text-3xl font-bold text-green-600">{dashboard.verificados}</div>
                             </div>
 
                             <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
@@ -804,7 +762,6 @@
                             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                                 <div className="text-sm text-gray-600 mb-1">Total TFLF</div>
                                 <div className="text-3xl font-bold text-blue-600">R$ {formatarMoeda(dashboard.totalReais)}</div>
-                                <div className="text-xs text-gray-500 mt-1">{dashboard.totalUFICAS.toFixed(1)} UFICAS</div>
                             </div>
 
                             <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
@@ -820,69 +777,31 @@
 
                         <div className="bg-white rounded-lg shadow p-4 mb-6">
                             <div className="flex gap-2 mb-4 border-b">
-                                <button
-                                    onClick={() => setAbaAtiva('principal')}
-                                    className={`px-4 py-2 font-medium transition ${
-                                        abaAtiva === 'principal'
-                                            ? 'text-blue-600 border-b-2 border-blue-600'
-                                            : 'text-gray-600 hover:text-gray-800'
-                                    }`}
-                                >
+                                <button onClick={() => setAbaAtiva('principal')} className={`px-4 py-2 font-medium ${abaAtiva === 'principal' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}>
                                     📋 Principal ({list.length})
                                 </button>
-                                <button
-                                    onClick={() => setAbaAtiva('duplicados')}
-                                    className={`px-4 py-2 font-medium transition ${
-                                        abaAtiva === 'duplicados'
-                                            ? 'text-orange-600 border-b-2 border-orange-600'
-                                            : 'text-gray-600 hover:text-gray-800'
-                                    }`}
-                                >
+                                <button onClick={() => setAbaAtiva('duplicados')} className={`px-4 py-2 font-medium ${abaAtiva === 'duplicados' ? 'text-orange-600 border-b-2 border-orange-600' : 'text-gray-600'}`}>
                                     ⚠️ Duplicidade ({dashboard.totalDuplicados})
                                 </button>
                             </div>
 
-                            <div className="flex flex-wrap gap-4 items-center justify-between">
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => setModalInserir(true)}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center gap-2"
-                                    >
-                                        ➕ Inserir
-                                    </button>
+                            <div className="flex flex-wrap gap-4">
+                                <button onClick={() => setModalInserir(true)} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                                    ➕ Inserir
+                                </button>
 
-                                    <label className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded cursor-pointer hover:bg-indigo-700 transition">
-                                        <span>📁 Importar TXT</span>
-                                        <input 
-                                            type="file" 
-                                            accept=".txt" 
-                                            onChange={e => importarTXT(e.target.files[0])}
-                                            className="hidden"
-                                        />
-                                    </label>
-                                    
-                                    <button 
-                                        onClick={consultarTodos}
-                                        className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition flex items-center gap-2"
-                                        disabled={consultandoQueue.length > 0}
-                                    >
-                                        {consultandoQueue.length > 0 ? '🔄 Consultando...' : '🔍 Consultar CNPJs'}
-                                    </button>
-                                    
-                                    <button 
-                                        onClick={consultarApenasCPFs}
-                                        className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition flex items-center gap-2"
-                                    >
-                                        👤 Exibir CPFs
-                                    </button>
-                                    
-                                    <button 
-                                        onClick={exportCSV}
-                                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-                                    >
-                                        📊 Exportar CSV
-                                    </button>
-                                </div>
+                                <label className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded cursor-pointer hover:bg-indigo-700">
+                                    <span>📁 Importar TXT</span>
+                                    <input type="file" accept=".txt" onChange={e => importarTXT(e.target.files[0])} className="hidden" />
+                                </label>
+
+                                <button onClick={consultarTodos} className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700" disabled={consultandoQueue.length > 0}>
+                                    {consultandoQueue.length > 0 ? '🔄 Consultando...' : '🔍 Consultar CNPJs'}
+                                </button>
+
+                                <button onClick={exportCSV} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                                    📊 Exportar CSV
+                                </button>
                             </div>
                         </div>
 
@@ -890,251 +809,130 @@
                             {modalInserir && (
                                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                                     <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                                        <h3 className="text-xl font-bold mb-4">➕ Inserir Contribuinte Manualmente</h3>
+                                        <h3 className="text-xl font-bold mb-4">➕ Inserir Contribuinte</h3>
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-sm font-medium mb-1">Inscrição Municipal</label>
-                                                <input
-                                                    type="text"
-                                                    value={formInserir.inscricao}
-                                                    onChange={e => setFormInserir({...formInserir, inscricao: e.target.value})}
-                                                    className="w-full px-3 py-2 border rounded"
-                                                    placeholder="Opcional"
-                                                />
+                                                <input type="text" value={formInserir.inscricao} onChange={e => setFormInserir({ ...formInserir, inscricao: e.target.value })} className="w-full px-3 py-2 border rounded" placeholder="Opcional" />
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium mb-1">CPF/CNPJ *</label>
-                                                <input
-                                                    type="text"
-                                                    value={formInserir.documento}
-                                                    onChange={e => setFormInserir({...formInserir, documento: e.target.value})}
-                                                    className="w-full px-3 py-2 border rounded"
-                                                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                                                    required
-                                                />
+                                                <input type="text" value={formInserir.documento} onChange={e => setFormInserir({ ...formInserir, documento: e.target.value })} className="w-full px-3 py-2 border rounded" required />
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium mb-1">Nome/Razão Social *</label>
-                                                <input
-                                                    type="text"
-                                                    value={formInserir.nome}
-                                                    onChange={e => setFormInserir({...formInserir, nome: e.target.value})}
-                                                    className="w-full px-3 py-2 border rounded"
-                                                    placeholder="Nome completo ou razão social"
-                                                    required
-                                                />
+                                                <input type="text" value={formInserir.nome} onChange={e => setFormInserir({ ...formInserir, nome: e.target.value })} className="w-full px-3 py-2 border rounded" required />
                                             </div>
                                         </div>
                                         <div className="flex gap-2 mt-6">
-                                            <button
-                                                onClick={inserirManual}
-                                                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                                            >
-                                                ✓ Confirmar
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setModalInserir(false);
-                                                    setFormInserir({ inscricao: '', documento: '', nome: '' });
-                                                }}
-                                                className="flex-1 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                                            >
-                                                ✗ Cancelar
-                                            </button>
+                                            <button onClick={inserirManual} className="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">✓ Confirmar</button>
+                                            <button onClick={() => { setModalInserir(false); setFormInserir({ inscricao: '', documento: '', nome: '' }); }} className="flex-1 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">✗ Cancelar</button>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
                             <div className="overflow-x-auto">
-                                <table className="w-full">
+                                <table className="w-full text-sm">
                                     <thead className="bg-indigo-600 text-white">
                                         <tr>
-                                            <th className="px-4 py-3 text-left">Status</th>
-                                            <th className="px-4 py-3 text-left">Inscrição</th>
-                                            <th className="px-4 py-3 text-left">Documento</th>
-                                            <th className="px-4 py-3 text-left">Nome</th>
-                                            <th className="px-4 py-3 text-center">Situação</th>
-                                            <th className="px-4 py-3 text-center">Porte</th>
-                                            <th className="px-4 py-3 text-center">Tributação</th>
-                                            <th className="px-4 py-3 text-center">VISA?</th>
-                                            <th className="px-4 py-3 text-center">Área (m²)</th>
-                                            <th className="px-4 py-3 text-center">O.S.</th>
-                                            <th className="px-4 py-3 text-center">Nível ISSQN</th>
-                                            <th className="px-4 py-3 text-center">Trimestre</th>
-                                            <th className="px-4 py-3 text-center">TFLF</th>
-                                            <th className="px-4 py-3 text-center">ISSQN</th>
-                                            <th className="px-4 py-3 text-center">VISA</th>
-                                            <th className="px-4 py-3 text-center">Lançado</th>
-                                            <th className="px-4 py-3 text-center">Ações</th>
+                                            <th className="px-3 py-2 text-left">Status</th>
+                                            <th className="px-3 py-2 text-left">Inscrição</th>
+                                            <th className="px-3 py-2 text-left">Documento</th>
+                                            <th className="px-3 py-2 text-left">Nome</th>
+                                            <th className="px-3 py-2">Situação</th>
+                                            <th className="px-3 py-2">Tributação</th>
+                                            <th className="px-3 py-2">VISA?</th>
+                                            <th className="px-3 py-2">Área</th>
+                                            <th className="px-3 py-2">N° OS</th>
+                                            <th className="px-3 py-2">Auditor</th>
+                                            <th className="px-3 py-2">Nível</th>
+                                            <th className="px-3 py-2">TFLF</th>
+                                            <th className="px-3 py-2">ISSQN</th>
+                                            <th className="px-3 py-2">VISA</th>
+                                            <th className="px-3 py-2">Lançado</th>
+                                            <th className="px-3 py-2">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {(() => {
                                             const listaExibir = abaAtiva === 'duplicados' ? getDuplicados() : list;
-                                            
+
                                             if (listaExibir.length === 0) {
                                                 return (
                                                     <tr>
-                                                        <td colSpan="17" className="px-4 py-8 text-center text-gray-500">
-                                                            {abaAtiva === 'duplicados' 
-                                                                ? '✅ Nenhum registro duplicado encontrado!' 
-                                                                : 'Nenhum contribuinte cadastrado. Importe um arquivo TXT para começar.'}
+                                                        <td colSpan="16" className="px-4 py-8 text-center text-gray-500">
+                                                            {abaAtiva === 'duplicados' ? '✅ Nenhum duplicado!' : 'Nenhum contribuinte. Importe um TXT.'}
                                                         </td>
                                                     </tr>
                                                 );
                                             }
-                                            
+
                                             return listaExibir.map(l => {
                                                 const tflf = calcTFLFReais(l.tributacao, l.tipoPessoa);
                                                 const issqnUficas = calcISSQN(l.nivelISSQN, l.trimestreAbertura || 1, l.issqnIsento, l.tipoPessoa);
-                                                const issqnReais = issqnUficas * VALOR_UFICA_2026;
+                                                const issqnReais = issqnUficas * valorUficaAtual;
                                                 const visa = calcVISA(l.areaM2 || 0, l.tributacao, l.porte, l.precisaVisa);
                                                 const consultando = consultandoQueue.includes(l.id);
                                                 const isDuplicado = getDuplicados().some(d => d.id === l.id);
 
                                                 return (
                                                     <tr key={l.id} className={`border-t hover:bg-gray-50 ${isDuplicado && abaAtiva === 'duplicados' ? 'bg-orange-50' : ''}`}>
-                                                        <td className="px-4 py-3 text-center">
-                                                            {consultando ? (
-                                                                <span className="text-blue-600">🔄</span>
-                                                            ) : l.consultado ? (
-                                                                <span className="text-green-600">✅</span>
-                                                            ) : isDuplicado ? (
-                                                                <span className="text-orange-600">⚠️</span>
-                                                            ) : (
-                                                                <span className="text-gray-400">⏳</span>
-                                                            )}
+                                                        <td className="px-3 py-2 text-center">
+                                                            {consultando ? <span className="text-blue-600">🔄</span> : l.verificado ? <span className="text-green-600">✅</span> : isDuplicado ? <span className="text-orange-600">⚠️</span> : <span className="text-gray-400">⏳</span>}
                                                         </td>
-                                                        <td className="px-4 py-3">{l.inscricaoMunicipal}</td>
-                                                        <td className="px-4 py-3 font-mono text-sm">{l.documento}</td>
-                                                        <td className="px-4 py-3">{l.razaoSocial}</td>
-                                                        
-                                                        <td className="px-4 py-3 text-center">
-                                                            <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                                                                l.situacao === 'Ativa' ? 'bg-green-100 text-green-700' :
-                                                                l.situacao === 'Suspensa' ? 'bg-yellow-100 text-yellow-700' :
-                                                                l.situacao === 'Inapta' ? 'bg-orange-100 text-orange-700' :
-                                                                l.situacao === 'Baixada' ? 'bg-red-100 text-red-700' :
-                                                                'bg-gray-100 text-gray-700'
-                                                            }`}>
+                                                        <td className="px-3 py-2">{l.inscricaoMunicipal}</td>
+                                                        <td className="px-3 py-2 font-mono">{l.documento}</td>
+                                                        <td className="px-3 py-2">{l.razaoSocial}</td>
+                                                        <td className="px-3 py-2 text-center">
+                                                            <span className={`px-2 py-1 rounded text-xs ${l.situacao === 'Ativa' ? 'bg-green-100 text-green-700' : l.situacao === 'Suspensa' ? 'bg-yellow-100 text-yellow-700' : l.situacao === 'Baixada' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
                                                                 {l.situacao || '-'}
                                                             </span>
                                                         </td>
-                                                        
-                                                        <td className="px-4 py-3 text-center">
-                                                            {l.tipoPessoa === 'CNPJ' ? (
-                                                                <span className="text-sm font-medium">{l.porte || '-'}</span>
-                                                            ) : (
-                                                                <span className="text-gray-400 text-sm">N/A</span>
-                                                            )}
-                                                        </td>
-
-                                                        <td className="px-4 py-3 text-center">
-                                                            <select
-                                                                value={l.tributacao || ''}
-                                                                onChange={e => update(l.id, 'tributacao', e.target.value)}
-                                                                className="px-2 py-1 border rounded bg-white text-sm"
-                                                            >
+                                                        <td className="px-3 py-2">
+                                                            <select value={l.tributacao || ''} onChange={e => update(l.id, 'tributacao', e.target.value)} className="px-2 py-1 border rounded bg-white text-xs">
                                                                 <option value="">Selecione</option>
                                                                 <option value="SIMPLES">Simples</option>
                                                                 <option value="EPP">EPP</option>
-                                                                <option value="LUCRO PRESUMIDO">Lucro Presumido</option>
-                                                                <option value="LUCRO REAL">Lucro Real</option>
+                                                                <option value="LUCRO PRESUMIDO">L. Presumido</option>
+                                                                <option value="LUCRO REAL">L. Real</option>
                                                                 <option value="AUTONOMO">Autônomo</option>
                                                                 <option value="ISENTO">Isento</option>
                                                                 <option value="MEI">MEI</option>
                                                             </select>
                                                         </td>
-
-                                                        <td className="px-4 py-3 text-center">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={l.precisaVisa || false}
-                                                                onChange={e => update(l.id, 'precisaVisa', e.target.checked)}
-                                                                className="w-4 h-4 cursor-pointer"
-                                                            />
+                                                        <td className="px-3 py-2 text-center">
+                                                            <input type="checkbox" checked={l.precisaVisa || false} onChange={e => update(l.id, 'precisaVisa', e.target.checked)} className="w-4 h-4" />
                                                         </td>
-
-                                                        <td className="px-4 py-3 text-center">
-                                                            <input
-                                                                type="number"
-                                                                value={l.areaM2 || ''}
-                                                                onChange={e => update(l.id, 'areaM2', Number(e.target.value))}
-                                                                className="px-2 py-1 border rounded w-20 text-sm"
-                                                                disabled={!l.precisaVisa}
-                                                            />
+                                                        <td className="px-3 py-2">
+                                                            <input type="number" value={l.areaM2 || ''} onChange={e => update(l.id, 'areaM2', Number(e.target.value))} className="px-2 py-1 border rounded w-16 text-xs" disabled={!l.precisaVisa} />
                                                         </td>
-
-                                                        <td className="px-4 py-3 text-center">
-                                                            <input
-                                                                type="text"
-                                                                value={l.ordemServico || ''}
-                                                                onChange={e => update(l.id, 'ordemServico', e.target.value)}
-                                                                placeholder="N° O.S."
-                                                                className="px-2 py-1 border rounded w-24 text-sm"
-                                                            />
+                                                        <td className="px-3 py-2">
+                                                            <input type="text" value={l.ordemServico || ''} onChange={e => update(l.id, 'ordemServico', e.target.value)} placeholder="N° OS" className="px-2 py-1 border rounded w-20 text-xs" />
                                                         </td>
-
-                                                        <td className="px-4 py-3 text-center">
-                                                            <select
-                                                                value={l.nivelISSQN}
-                                                                onChange={e => update(l.id, 'nivelISSQN', e.target.value)}
-                                                                className="px-2 py-1 border rounded text-sm"
-                                                                disabled={l.tipoPessoa === 'CNPJ'}
-                                                            >
-                                                                {l.tipoPessoa === 'CNPJ' ? (
-                                                                    <option value="VARIAVEL">Variável</option>
-                                                                ) : (
-                                                                    <>
-                                                                        <option value="MEDIO">Médio</option>
-                                                                        <option value="SUPERIOR">Superior</option>
-                                                                    </>
-                                                                )}
+                                                        <td className="px-3 py-2">
+                                                            <select value={l.auditor || ''} onChange={e => update(l.id, 'auditor', e.target.value)} className="px-2 py-1 border rounded text-xs bg-white">
+                                                                <option value="">Selecione</option>
+                                                                {AUDITORES.map((aud, idx) => <option key={idx} value={aud}>{aud}</option>)}
                                                             </select>
                                                         </td>
-
-                                                        <td className="px-4 py-3 text-center">
-                                                            <input
-                                                                type="number"
-                                                                min="1"
-                                                                max="4"
-                                                                value={l.trimestreAbertura || 1}
-                                                                onChange={e => update(l.id, 'trimestreAbertura', Number(e.target.value))}
-                                                                className="px-2 py-1 border rounded w-12 text-sm"
-                                                            />
+                                                        <td className="px-3 py-2">
+                                                            <select value={l.nivelISSQN} onChange={e => update(l.id, 'nivelISSQN', e.target.value)} className="px-2 py-1 border rounded text-xs" disabled={l.tipoPessoa === 'CNPJ'}>
+                                                                {l.tipoPessoa === 'CNPJ' ? <option value="VARIAVEL">Variável</option> : <><option value="MEDIO">Médio</option><option value="SUPERIOR">Superior</option></>}
+                                                            </select>
                                                         </td>
-
-                                                        <td className="px-4 py-3 text-center">R$ {formatarMoeda(tflf)}</td>
-                                                        <td className="px-4 py-3 text-center">R$ {formatarMoeda(issqnReais)}</td>
-                                                        <td className="px-4 py-3 text-center">R$ {formatarMoeda(visa)}</td>
-                                                        <td className="px-4 py-3 text-center">
-                                                            <select
-                                                                value={l.taxasLancadas}
-                                                                onChange={e => update(l.id, 'taxasLancadas', e.target.value)}
-                                                                className={`px-2 py-1 border rounded text-sm font-semibold ${
-                                                                    l.taxasLancadas === 'SIM' ? 'bg-green-50 text-green-700 border-green-300' : 'bg-yellow-50 text-yellow-700 border-yellow-300'
-                                                                }`}
-                                                            >
+                                                        <td className="px-3 py-2 text-right">R$ {formatarMoeda(tflf)}</td>
+                                                        <td className="px-3 py-2 text-right">R$ {formatarMoeda(issqnReais)}</td>
+                                                        <td className="px-3 py-2 text-right">R$ {formatarMoeda(visa)}</td>
+                                                        <td className="px-3 py-2">
+                                                            <select value={l.taxasLancadas} onChange={e => update(l.id, 'taxasLancadas', e.target.value)} className={`px-2 py-1 border rounded text-xs ${l.taxasLancadas === 'SIM' ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>
                                                                 <option value="NAO">NÃO</option>
                                                                 <option value="SIM">SIM</option>
                                                             </select>
                                                         </td>
-                                                        <td className="px-4 py-3 text-center flex justify-center gap-2">
-                                                            <button
-                                                                onClick={() => excluir(l.id)}
-                                                                className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
-                                                            >
-                                                                🗑️
-                                                            </button>
-                                                            {l.tipoPessoa === 'CNPJ' && !l.consultado && (
-                                                                <button
-                                                                    onClick={() => consultarCNPJ(l.documento, l.id)}
-                                                                    className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
-                                                                >
-                                                                    🔍
-                                                                </button>
-                                                            )}
+                                                        <td className="px-3 py-2 text-center">
+                                                            <button onClick={() => excluir(l.id)} className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs mr-1">🗑️</button>
+                                                            {l.tipoPessoa === 'CNPJ' && !l.verificado && <button onClick={() => consultarCNPJ(l.documento, l.id)} className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs">🔍</button>}
                                                         </td>
                                                     </tr>
                                                 );
@@ -1152,4 +950,5 @@
         ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
+
 </html>
